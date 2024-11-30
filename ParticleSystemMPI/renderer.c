@@ -4,12 +4,11 @@
 #include <stdlib.h>
 #include "globals.h"
 
-extern Particle particles[MAX_PARTICLES];
-extern int window_width;
-extern int window_height;
-extern float mouseX;  // External variable for mouse X position
-extern float mouseY;  // External variable for mouse Y position
-extern int attractParticles;  // External variable for attract/repel toggle
+#define M_PI 3.14159265358979323846
+#define VORTEX_STRENGTH 0.5f
+#define VORTEX_RADIUS 0.5f
+
+extern float currentVortexStrength;
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -19,6 +18,22 @@ void display() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_POINT_SMOOTH);
 
+    // Draw particle trails
+    glBegin(GL_LINES);
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        if (!particles[i].active) continue;
+
+        glColor4f(particles[i].color[0], particles[i].color[1], particles[i].color[2], particles[i].color[3] * 0.3f);
+        for (int j = 0; j < 2; j++) {
+            int idx1 = (particles[i].trailIndex + j) % 3;
+            int idx2 = (particles[i].trailIndex + j + 1) % 3;
+            glVertex3fv(particles[i].trail[idx1]);
+            glVertex3fv(particles[i].trail[idx2]);
+        }
+    }
+    glEnd();
+
+    // Draw particles
     glBegin(GL_POINTS);
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (!particles[i].active) continue;
@@ -26,6 +41,15 @@ void display() {
         glPointSize(particles[i].size);
         glColor4fv(particles[i].color);
         glVertex3fv(particles[i].position);
+    }
+    glEnd();
+
+    // Draw vortex indicator
+    glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+    glBegin(GL_LINE_LOOP);
+    for (int i = 0; i < 36; i++) {
+        float angle = i * 10 * M_PI / 180.0f;
+        glVertex2f(VORTEX_RADIUS * cosf(angle), VORTEX_RADIUS * sinf(angle));
     }
     glEnd();
 
@@ -53,22 +77,19 @@ void reshape(int w, int h) {
 void timer(int value) {
     updateParticles();
     glutPostRedisplay();
-    glutTimerFunc(16, timer, 0);  // 16 ms for ~60 FPS
+    glutTimerFunc(16, timer, 0);
 }
 
 void keyboard(unsigned char key, int x, int y) {
     switch (key) {
-    case 27: // ESC key
+    case 27:
         exit(0);
         break;
     case 'r': // Reset particles
         initParticles();
         break;
-    case 'a': // Toggle to attract particles
-        attractParticles = 1;
-        break;
-    case 'd': // Toggle to repel particles
-        attractParticles = -1;
+    case 'v': // Toggle vortex on/off
+        currentVortexStrength = (currentVortexStrength == 0.0f) ? VORTEX_STRENGTH : 0.0f;
         break;
     default:
         attractParticles = 0;
@@ -78,10 +99,9 @@ void keyboard(unsigned char key, int x, int y) {
 
 // Mouse motion callback to track mouse position
 void mouseMotion(int x, int y) {
-    // Convert mouse coordinates to OpenGL world coordinates
     float aspectRatio = (float)window_width / (float)window_height;
-    mouseX = ((float)x / (float)window_width) * 2.0f - 1.0f;  // Normalize x to [-1, 1]
-    mouseY = 1.0f - ((float)y / (float)window_height) * 2.0f; // Normalize y to [-1, 1]
+    mouseX = ((float)x / (float)window_width) * 2.0f - 1.0f;
+    mouseY = 1.0f - ((float)y / (float)window_height) * 2.0f;
 
     // Adjust for aspect ratio
     if (window_width > window_height) {

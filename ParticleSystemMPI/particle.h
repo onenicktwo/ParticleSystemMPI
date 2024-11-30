@@ -8,10 +8,12 @@ typedef struct {
     float life;
     float size;
     int active;
+    float trail[3][3];
+    int trailIndex;   
 } Particle;
 
-void initParticle(Particle* p);
 void initParticles(void);
 void updateParticles(void);
+void addVortexForce(float centerX, float centerY, float strength, float radius);
 
 #endif
