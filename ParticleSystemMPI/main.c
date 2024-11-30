@@ -14,6 +14,8 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard);
+    glutMouseFunc(mouse);        // Register mouse click handler
+    glutMotionFunc(mouseMotion); // Register mouse motion handler
     glutTimerFunc(0, timer, 0);
 
     // Set clear color to black
