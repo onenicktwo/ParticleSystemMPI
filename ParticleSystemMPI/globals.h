@@ -3,7 +3,7 @@
 
 #include "particle.h"
 
-#define MAX_PARTICLES 100000
+#define MAX_PARTICLES 10000
 
 extern Particle particles[MAX_PARTICLES];
 extern int window_width;

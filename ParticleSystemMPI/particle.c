@@ -9,7 +9,7 @@
 #define TIME_STEP 0.016f
 #define MOUSE_ATTRACTION_STRENGTH 0.5f
 #define MAX_ATTRACTION_DISTANCE 2.0f
-#define EMITTER_COUNT 3
+#define EMITTER_COUNT 5
 #define VORTEX_STRENGTH 0.5f
 #define VORTEX_RADIUS 0.5f
 #define M_PI 3.14159265358979323846
@@ -33,6 +33,8 @@ void initEmitters() {
     emitters[0] = (Emitter){ {-0.8f, -1.0f}, {0.5f, 1.0f}, 30.0f };
     emitters[1] = (Emitter){ {0.0f, -1.0f}, {0.0f, 1.0f}, 15.0f };
     emitters[2] = (Emitter){ {0.8f, -1.0f}, {-0.5f, 1.0f}, 30.0f };
+    emitters[3] = (Emitter){ {-0.8f, -0.5f}, {0.5f, 0.5f}, 45.0f };
+    emitters[4] = (Emitter){ {0.8f, -0.5f}, {-0.5f, 0.5f}, 45.0f };
 }
 
 void initParticle(Particle* p, int emitterIndex) {

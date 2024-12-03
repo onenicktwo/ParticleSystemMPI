@@ -6,7 +6,6 @@
 
 #define M_PI 3.14159265358979323846
 #define VORTEX_STRENGTH 0.5f
-#define VORTEX_RADIUS 0.5f
 
 extern float currentVortexStrength;
 
@@ -41,15 +40,6 @@ void display() {
         glPointSize(particles[i].size);
         glColor4fv(particles[i].color);
         glVertex3fv(particles[i].position);
-    }
-    glEnd();
-
-    // Draw vortex indicator
-    glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-    glBegin(GL_LINE_LOOP);
-    for (int i = 0; i < 36; i++) {
-        float angle = i * 10 * M_PI / 180.0f;
-        glVertex2f(VORTEX_RADIUS * cosf(angle), VORTEX_RADIUS * sinf(angle));
     }
     glEnd();
 
