@@ -8,4 +8,8 @@ float mouseY = 0.0f;
 int attractParticles = 0;
 int rank;
 int size;
-int emitter_count = 5;
+int emitter_count = EMITTER_COUNT;
+int currentVortexStrength = VORTEX_STRENGTH;
+
+// MPI-related globals
+MPI_Datatype MPI_PARTICLE;

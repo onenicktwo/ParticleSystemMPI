@@ -1,45 +1,63 @@
 #include "mpi_handler.h"
 #include "globals.h"
-#include "mpi.h"
 
-void initMPI(int argc, char** argv, int* rank, int* size) {
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, rank);
-    MPI_Comm_size(MPI_COMM_WORLD, size);
+static MPI_Datatype MPI_PARTICLE;
+static int syncCounter = 0;
+#define SYNC_INTERVAL 10
+
+void initMPIHandler() {
+    // Create MPI datatype for Particle
+    int blocklengths[] = { 3, 3, 4, 1, 1, 1, 9, 1 };
+    MPI_Datatype types[] = { MPI_FLOAT, MPI_FLOAT, MPI_FLOAT, MPI_FLOAT, MPI_FLOAT, MPI_INT, MPI_FLOAT, MPI_INT };
+    MPI_Aint offsets[8];
+
+    offsets[0] = offsetof(Particle, position);
+    offsets[1] = offsetof(Particle, velocity);
+    offsets[2] = offsetof(Particle, color);
+    offsets[3] = offsetof(Particle, life);
+    offsets[4] = offsetof(Particle, size);
+    offsets[5] = offsetof(Particle, active);
+    offsets[6] = offsetof(Particle, trail);
+    offsets[7] = offsetof(Particle, trailIndex);
+
+    MPI_Type_create_struct(8, blocklengths, offsets, types, &MPI_PARTICLE);
+    MPI_Type_commit(&MPI_PARTICLE);
 }
 
-void distributeParticles(int rank, int size) {
-    int particles_per_process = MAX_PARTICLES / size;
-    int remainder = MAX_PARTICLES % size;
+void synchronizeParticles() {
+    syncCounter++;
+    if (syncCounter < SYNC_INTERVAL) return;
+    syncCounter = 0;
 
-    // Calculate the start and end indices for the current rank
-    int start_index = rank * particles_per_process + (rank < remainder ? rank : remainder);
-    int end_index = start_index + particles_per_process + (rank < remainder ? 1 : 0);
+    int particlesPerProcess = MAX_PARTICLES / size;
+    int startIndex = rank * particlesPerProcess;
+    int endIndex = (rank == size - 1) ? MAX_PARTICLES : (rank + 1) * particlesPerProcess;
+    int particlesToSend = endIndex - startIndex;
 
-    // Initialize particles for this rank
-    for (int i = start_index; i < end_index; i++) {
-        initParticle(&particles[i], i % EMITTER_COUNT); // Assuming initParticle initializes a particle
+    // Gather all particles to rank 0
+    if (rank == 0) {
+        // Receive buffer for rank 0
+        MPI_Gather(MPI_IN_PLACE, particlesToSend, MPI_PARTICLE,
+            particles, particlesToSend, MPI_PARTICLE,
+            0, MPI_COMM_WORLD);
     }
+    else {
+        // Send buffer for other ranks
+        MPI_Gather(&particles[startIndex], particlesToSend, MPI_PARTICLE,
+            NULL, 0, MPI_PARTICLE,
+            0, MPI_COMM_WORLD);
+    }
+
+    // Broadcast the updated particles to all processes
+    MPI_Bcast(particles, MAX_PARTICLES, MPI_PARTICLE, 0, MPI_COMM_WORLD);
 }
 
-void exchangeBoundaryParticles(int rank, int size) {
-    int particles_per_process = MAX_PARTICLES / size;
-    int start_index = rank * particles_per_process;
-    int end_index = (rank + 1) * particles_per_process;
+void broadcastInteractionData() {
+    float interactionData[4] = { mouseX, mouseY, (float)attractParticles, currentVortexStrength };
+    MPI_Bcast(interactionData, 4, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-    // Exchange boundary particles with neighboring processes
-    if (rank > 0) {
-        MPI_Send(&particles[start_index], sizeof(Particle), MPI_BYTE, rank - 1, 0, MPI_COMM_WORLD);
-        MPI_Recv(&particles[start_index - 1], sizeof(Particle), MPI_BYTE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    }
-    if (rank < size - 1) {
-        MPI_Send(&particles[end_index - 1], sizeof(Particle), MPI_BYTE, rank + 1, 0, MPI_COMM_WORLD);
-        MPI_Recv(&particles[end_index], sizeof(Particle), MPI_BYTE, rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    }
-}
-
-void gatherParticles(int rank, int size) {
-    MPI_Gather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-        particles, MAX_PARTICLES / size * sizeof(Particle), MPI_BYTE,
-        0, MPI_COMM_WORLD);
+    mouseX = interactionData[0];
+    mouseY = interactionData[1];
+    attractParticles = (int)interactionData[2];
+    currentVortexStrength = interactionData[3];
 }

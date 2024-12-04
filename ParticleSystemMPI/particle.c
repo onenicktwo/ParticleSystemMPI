@@ -3,18 +3,15 @@
 #include <time.h>
 #include <math.h>
 #include "globals.h"
+#include "mpi_handler.h"
 
 #define GRAVITY -9.81f
 #define INITIAL_VELOCITY 5.0f
 #define TIME_STEP 0.016f
 #define MOUSE_ATTRACTION_STRENGTH 0.5f
 #define MAX_ATTRACTION_DISTANCE 2.0f
-#define EMITTER_COUNT 5
-#define VORTEX_STRENGTH 0.5f
 #define VORTEX_RADIUS 0.5f
 #define M_PI 3.14159265358979323846
-
-currentVortexStrength = VORTEX_STRENGTH;
 
 typedef struct {
     float position[2];
@@ -63,11 +60,19 @@ void initParticle(Particle* p, int emitterIndex) {
 }
 
 void initParticles() {
-    srand(time(NULL));
+    srand(time(NULL) + rank); // Use different seeds for each process
     initEmitters();
-    for (int i = 0; i < MAX_PARTICLES; i++) {
+
+    int particlesPerProcess = MAX_PARTICLES / size;
+    int startIndex = rank * particlesPerProcess;
+    int endIndex = (rank == size - 1) ? MAX_PARTICLES : (rank + 1) * particlesPerProcess;
+
+    for (int i = startIndex; i < endIndex; i++) {
         initParticle(&particles[i], i % EMITTER_COUNT);
     }
+
+    // Synchronize initial particle states across all processes
+    synchronizeParticles();
 }
 
 void addVortexForce(float centerX, float centerY, float strength, float radius) {
@@ -89,8 +94,17 @@ void addVortexForce(float centerX, float centerY, float strength, float radius) 
 }
 
 void updateParticles() {
-    for (int i = 0; i < MAX_PARTICLES; i++) {
-        if (!particles[i].active) continue;
+    broadcastInteractionData(); // Ensure all processes have up-to-date interaction data
+
+    int particlesPerProcess = MAX_PARTICLES / size;
+    int startIndex = rank * particlesPerProcess;
+    int endIndex = (rank == size - 1) ? MAX_PARTICLES : (rank + 1) * particlesPerProcess;
+
+    for (int i = startIndex; i < endIndex; i++) {
+        if (!particles[i].active) {
+            initParticle(&particles[i], i % EMITTER_COUNT);
+            continue;
+        }
 
         // Update trail
         particles[i].trailIndex = (particles[i].trailIndex + 1) % 3;
@@ -138,4 +152,7 @@ void updateParticles() {
     }
 
     addVortexForce(0.0f, 0.0f, currentVortexStrength, VORTEX_RADIUS);
+
+    // Synchronize particles across all processes (less frequently)
+    synchronizeParticles();
 }
