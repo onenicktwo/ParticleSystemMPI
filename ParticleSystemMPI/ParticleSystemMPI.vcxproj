@@ -130,19 +130,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="globals.c" />
     <ClCompile Include="main.c" />
-    <ClCompile Include="mpi_handler.c" />
-    <ClCompile Include="mpi_type.c" />
-    <ClCompile Include="particle.c" />
-    <ClCompile Include="renderer.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="globals.h" />
-    <ClInclude Include="mpi_handler.h" />
-    <ClInclude Include="mpi_type.h" />
-    <ClInclude Include="particle.h" />
-    <ClInclude Include="renderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
