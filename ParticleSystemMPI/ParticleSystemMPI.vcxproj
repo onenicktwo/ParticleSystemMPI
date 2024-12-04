@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Program Files %28x86%29\Microsoft SDKs\MPI\Include\x64;C:\Users\DUCKY\OpenGL\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files %28x86%29\Microsoft SDKs\MPI\Include;C:\Users\DUCKY\OpenGL\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,11 +132,15 @@
   <ItemGroup>
     <ClCompile Include="globals.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="mpi_handler.c" />
+    <ClCompile Include="mpi_type.c" />
     <ClCompile Include="particle.c" />
     <ClCompile Include="renderer.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="globals.h" />
+    <ClInclude Include="mpi_handler.h" />
+    <ClInclude Include="mpi_type.h" />
     <ClInclude Include="particle.h" />
     <ClInclude Include="renderer.h" />
   </ItemGroup>

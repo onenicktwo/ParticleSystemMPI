@@ -14,11 +14,6 @@
 #define VORTEX_RADIUS 0.5f
 #define M_PI 3.14159265358979323846
 
-extern Particle particles[MAX_PARTICLES];
-
-float mouseX = 0.0f;
-float mouseY = 0.0f;
-int attractParticles = 0;
 currentVortexStrength = VORTEX_STRENGTH;
 
 typedef struct {

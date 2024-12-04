@@ -1,6 +1,8 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
+#include <stddef.h> 
+
 typedef struct {
     float position[3];
     float velocity[3];
